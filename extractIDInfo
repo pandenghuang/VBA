@@ -1,0 +1,25 @@
+Sub extractIDInfo()    '利用VBA从身份证号码中提取性别、出生日期和年龄
+    Dim rng As Range, i As Integer, Mystr As String, arr(), arr2()
+    If TypeName(Selection) <> "Range" Then MsgBox "请选择存放身份证号码的区域": Exit Sub
+    Set rng = Intersect(Selection, ActiveSheet.UsedRange)
+    If rng.Columns.Count > 1 Then MsgBox "只能选择单列", vbOKOnly + vbInformation, "出错提示": Exit Sub
+    If rng(1) = "" Then MsgBox "请选择身份证号码存放区域", vbOKOnly + vbInformation, "出错提示": Exit Sub
+    
+    ReDim arr(1 To rng.Rows().Count, 1 To 1)
+    For i = 1 To rng.Rows().Count
+        arr(i, 1) = rng(i).Value
+    Next
+
+    ReDim arr2(1 To UBound(arr), 1 To 3)
+    For i = 1 To UBound(arr)
+        If Len(arr(i, 1)) = 15 Or Len(arr(i, 1)) = 18 Then
+            arr2(i, 1) = IIf((Mid(arr(i, 1), 15, 3) Mod 2), "男", "女")
+            If Len(arr(i, 1)) = 15 And Mid(arr(i, 1), 7, 1) = 0 Then Mystr = "20" & Mid(arr(i, 1), 7, 2) & "-" & Mid(arr(i, 1), 9, 2) & "-" & Mid(arr(i, 1), 11, 2)
+            If Len(arr(i, 1)) = 15 And Mid(arr(i, 1), 7, 1) > 0 Then Mystr = "19" & Mid(arr(i, 1), 7, 2) & "-" & Mid(arr(i, 1), 9, 2) & "-" & Mid(arr(i, 1), 11, 2)
+            If Len(arr(i, 1)) = 18 Then Mystr = Mid(arr(i, 1), 7, 4) & "-" & Mid(arr(i, 1), 11, 2) & "-" & Mid(arr(i, 1), 13, 2)
+            arr2(i, 2) = Mystr
+            arr2(i, 3) = Evaluate("DATEDIF(" & DateSerial(Split(Mystr, "-")(0), Split(Mystr, "-")(1), Split(Mystr, "-")(2)) * 1 & ", NOW()," & """Y""" & ")")
+        End If
+    Next i
+    rng.Offset(0, 1).Resize(UBound(arr), 3) = arr2
+End Sub

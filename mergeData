@@ -1,0 +1,26 @@
+Private Sub mergeData()
+    Dim FilePath As String, FileName As String, sht As Worksheet, Item As Integer, arr()
+    FilePath = ThisWorkbook.Path
+    FilePath = FilePath & IIf(Right(FilePath, 1) = "\", "", "\")
+    Application.ScreenUpdating = False
+    FileName = Dir(FilePath & "*.xls*")
+    Do
+        If Len(FileName) = 0 Then Exit Do
+        If FileName <> ThisWorkbook.Name Then
+            With Workbooks.Open(FilePath & FileName)
+                For Each sht In .Worksheets
+                    Item = Item + 1
+                    ReDim Preserve arr(1 To Item)
+                    arr(Item) = "'" & FilePath & "[" & FileName & "]" & sht.Name & "'!R1C2:R" & sht.UsedRange.Rows.Count & "C4"
+                Next sht
+            End With
+            Workbooks(FileName).Close , False
+        End If
+        FileName = Dir
+    Loop
+    Range("a1").Consolidate Sources:=arr, Function:=xlSum, TopRow:=True, LeftColumn:=True, CreateLinks:=False
+    Range("a1") = "产品名称"
+    Range("a1").CurrentRegion.EntireColumn.AutoFit
+    Range("a1").CurrentRegion.Borders.LineStyle = xlContinuous
+    Application.ScreenUpdating = True
+End Sub
